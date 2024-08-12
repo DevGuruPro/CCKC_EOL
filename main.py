@@ -15,6 +15,7 @@ from utils.logger import logger
 
 
 class CCKCEOLApp(QMainWindow):
+
     def __init__(self):
         super().__init__()
         self.ui = Ui_EOL()
