@@ -6,70 +6,73 @@ from settings import ARBITRATION_ID
 from utils.logger import logger
 
 
-def setup_can_interface(interface='can0', bitrate=500000):
-    os.system(f'sudo ip link set {interface} down')
-    os.system(f'sudo ip link set {interface} up type can bitrate {bitrate}')
-    logger.debug(f'{interface} interface set up with bitrate {bitrate}.')
+class CANHandler:
 
+    def __init__(self, interface='can0', bitrate=500000):
+        self.itf = interface
+        self.bitrate = bitrate
+        self.bus = None
+        self.setup_interface()
 
-def wait_until_disconnected(interface='can0', timeout=1):
-    try:
-        bus = can.interface.Bus(channel=interface, bustype='socketcan')
-    except Exception as e:
-        logger.debug(f"Error creating bus {interface}: {str(e)}")
-        return
+    def setup_interface(self):
+        os.system(f'sudo ip link set {self.itf} down')
+        os.system(f'sudo ip link set {self.itf} up type can bitrate {self.bitrate}')
+        logger.debug(f'{self.itf} interface set up with bitrate {self.bitrate}.')
 
-    start_time = time.time()
-    while True:
-        msg = bus.recv(timeout=0.1)  # Non-blocking, wait a bit for a message
-        if msg:
-            logger.debug(f"Received message: {msg}. Still connected.")
-        if time.time() - start_time > timeout:
-            logger.debug("No message received, assuming disconnection or silence on the CAN bus.")
+    def connect(self):
+        try:
+            self.bus = can.interface.Bus(channel=self.itf, bustype='socketcan')
+            msg = can.Message(arbitration_id=ARBITRATION_ID, is_remote_frame=True, is_extended_id=False)
+            self.bus.send(msg, timeout=1)
+            logger.info(f'Successfully sent a message on {self.itf}. The device is connected.')
+            return True
+        except Exception as e:
+            logger.error(f'Failed to check CAN device - {e}')
+            self.bus = None
+
+    def receive(self):
+        if self.bus is not None or self.connect():
+            try:
+                msg = self.bus.recv()
+                if msg.arbitration_id == ARBITRATION_ID:
+                    serial_number = msg.data
+                    logger.debug(f"Received serial number {serial_number}")
+                    return serial_number
+            except Exception as e:
+                logger.error(f"Failed to receive CAN data - {e}")
+                self.bus = None
+
+    def write(self, data):
+        if self.bus is not None or self.connect():
+            try:
+                msg = can.Message(arbitration_id=ARBITRATION_ID, data=data, is_extended_id=False)
+                self.bus.send(msg, timeout=1)
+                return True
+            except Exception as e:
+                logger.error(f"Failed to send CAN data - {e}")
+                self.bus = None
+
+    def handshake_data(self, data, compare_len=6):
+        if not self.write(data):
             return
+        recv = self.receive()
+        if not recv:
+            return
+        if data[1:compare_len] != recv[1:compare_len]:
+            return False
+        return True
 
-
-def check_can_device(interface='can1'):
-    try:
-        bus = can.interface.Bus(channel=interface, bustype='socketcan')
-        msg = can.Message(arbitration_id=ARBITRATION_ID, is_remote_frame=True, is_extended_id=False)
-        bus.send(msg, timeout=1)
-        logger.info(f'Successfully sent a message on {interface}. The device is connected.')
-    except OSError:
-        logger.error(f'Error: Could not send a message on {interface}. Will retry...')
-        return False
-    except can.CanError as e:
-        logger.error(f'CAN Error: {str(e)}')
-        return False
-
-
-def recv_from_can(interface='can0'):
-    try:
-        bus = can.interface.Bus(channel=interface, bustype='socketcan')
+    def disconnect(self):
+        start_time = time.time()
         while True:
-            msg = bus.recv()
-            if msg.arbitration_id == ARBITRATION_ID:
-                serial_number = msg.data
-                logger.debug(f"Received serial number {serial_number}")
-                return serial_number
-    except OSError:
-        logger.error(f'Error: Could not receive a message on {interface}.')
-        return False
-    except can.CanError as e:
-        logger.error(f'CAN Error: {str(e)}')
-        return False
-
-
-def write_to_can(interface='can1', serial_data=bytearray()):
-    try:
-        bus = can.interface.Bus(channel=interface, bustype='socketcan')
-        msg = can.Message(arbitration_id=ARBITRATION_ID, data=serial_data, is_extended_id=False)
-        bus.send(msg, timeout=1)
-        logger.debug(f"Write serial number {serial_data}")
-        return
-    except OSError:
-        logger.error(f'Error: Could not receive a message on {interface}.')
-        return False
-    except can.CanError as e:
-        logger.error(f'CAN Error: {str(e)}')
-        return False
+            try:
+                msg = self.bus.recv(timeout=0.1)  # Non-blocking, wait a bit for a message
+            except Exception as e:
+                logger.error(f"Failed to receive CAN data to disconnect - {e}")
+                self.bus = None
+                return
+            if msg:
+                logger.debug(f"Received message: {msg}. Still connected.")
+            if time.time() - start_time > 5:
+                logger.debug("No message received, assuming disconnection or silence on the CAN bus.")
+                return

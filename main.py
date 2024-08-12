@@ -3,66 +3,83 @@ import threading
 import time
 
 from PySide6 import QtCore
+from PySide6.QtCore import Signal
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QApplication, QMainWindow
 from pynput.keyboard import Listener, Key
 
 from settings import DESCRIPTION
 from ui.ui_eol import Ui_EOL
-from utils.can_util import setup_can_interface, check_can_device, write_to_can, recv_from_can, wait_until_disconnected
-from utils.common import convert_code_to_data, validate_writing, convert_time_to_data
+from utils.can_util import CANHandler
+from utils.common import convert_code_to_data, convert_time_to_data
 from utils.logger import logger
 
 
 class CCKCEOLApp(QMainWindow):
 
+    sig_msg = Signal(str)
+
     def __init__(self):
         super().__init__()
         self.ui = Ui_EOL()
         self.ui.setupUi(self)
-        self.ui.closeAppBtn.released.connect(QApplication.instance().quit)
+        self.ui.closeAppBtn.released.connect(self.close)
 
         screen_size = QApplication.primaryScreen().availableGeometry()
         center_x = (screen_size.width() - self.geometry().width()) // 2
         center_y = (screen_size.height() - self.geometry().height()) // 2
         self.move(center_x, center_y - 50)
-
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)  # Qt.WindowType.Popup
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
 
+        self.can = CANHandler()
+
+        self._b_stop = threading.Event()
+        self._b_stop.clear()
+        self._state = 'init'
+        self._fsm_thread = threading.Thread(target=self._fsm)
+        self._fsm_thread.start()
         self.scanned_code = ""
-        self.start_process()
-
-    def start_process(self):
-        self.start_can_watch_thread()
-        self.scanned_code = ""
-        self.ui.txtLabel.setText(DESCRIPTION[0])
-
-    def start_can_watch_thread(self, interface='can0', retry_interval=5):
-        thread = threading.Thread(target=self.wait_for_can_connection, args=(interface, retry_interval), daemon=True)
-        thread.start()
-
-    def wait_for_can_connection(self, interface, retry_interval):
-        setup_can_interface(interface)
-        while True:
-            if check_can_device(interface):
-                logger.debug(f"{interface} is operational. Exiting thread.")
-                # if check_valid_serial():
-                #     self.ui.txtLabel.setText(f"Serial number detected. Please connect new device.")
-                #     self.start_can_watch_thread()
-                # else:
-                self.ui.txtLabel.setText("Please scan ADB serial number.")
-                self.scan_adb_serial()
-                break
-            else:
-                logger.debug(f"Waiting for {interface} to become operational...")
-                time.sleep(retry_interval)
-
-    def scan_adb_serial(self):
-        self.scanned_code = ""
-        listener_thread = threading.Thread(
+        self.sig_msg.connect(self._on_msg_received)
+        self.key_thread = threading.Thread(
             target=lambda: Listener(on_press=self.on_press, on_release=self.on_release).start())
-        listener_thread.start()
+        self.key_thread.start()
+
+    def _fsm(self):
+        while not self._b_stop.isSet():
+            time.sleep(.001)
+            if self._state == 'init':
+                self.sig_msg.emit(DESCRIPTION[0])
+                self._state = 'wait_can_connected'
+            elif self._state == 'wait_can_connected':
+                if self.can.connect():
+                    self.sig_msg.emit('Please scan ADB serial number.')
+                    self.scanned_code = ""
+                    self._state = 'scan_adb_serial'
+                else:
+                    time.sleep(3)
+            elif self._state == 'scan_adb_serial':
+                pass
+            elif self._state == 'process_scanned_code':
+                result = self.can.handshake_data(data=convert_code_to_data(self.scanned_code), compare_len=6)
+                if result is None:
+                    self._state = 'init'
+                    continue
+                elif result is False:
+                    self.sig_msg.emit(DESCRIPTION[2])
+                    self._state = 'scan_adb_serial'
+                    continue
+                result = self.can.handshake_data(convert_time_to_data(), compare_len=7)
+                if result is None:
+                    self._state = 'init'
+                    continue
+                elif result is False:
+                    self.sig_msg.emit(DESCRIPTION[2])
+                    self._state = 'scan_adb_serial'
+                    continue
+                self.sig_msg.emit(DESCRIPTION[4])
+                self.can.disconnect()
+                self._state = 'init'
 
     def on_press(self, key):
         try:
@@ -72,26 +89,18 @@ class CCKCEOLApp(QMainWindow):
             pass
 
     def on_release(self, key):
-        if key == Key.enter:
-            logger.debug(f"Scanned Code: {self.scanned_code}")
-            send_data = convert_code_to_data(self.scanned_code)
-            self.scanned_code = ""
-            write_to_can(serial_data=send_data)
-            recv_data = recv_from_can()
-            if validate_writing(send_data[1:6], recv_data[1:6]) is False:
-                self.ui.txtLabel.setText(DESCRIPTION[2])
-                self.scan_adb_serial()
-                return
-            send_data = convert_time_to_data()
-            write_to_can(serial_data=send_data)
-            recv_data = recv_from_can()
-            if validate_writing(send_data[1:7], recv_data[1:7]) is False:
-                self.ui.txtLabel.setText(DESCRIPTION[3])
-                self.scan_adb_serial()
-                return
-            self.ui.txtLabel.setText(DESCRIPTION[4])
-            wait_until_disconnected()
-            self.start_process()
+        if self._state == 'scan_adb_serial' and key == Key.enter:
+            logger.debug(f"ENTER released, scanned Code: {self.scanned_code}")
+            self._state = 'process_scanned_code'
+
+    def _on_msg_received(self, msg):
+        self.ui.txtLabel.setText(msg)
+
+    def closeEvent(self, event):
+        self._b_stop.set()
+        self._fsm_thread.join(.1)
+        self.key_thread.join(.1)
+        return super().closeEvent(event)
 
 
 if __name__ == "__main__":
