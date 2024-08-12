@@ -22,6 +22,13 @@ INIT_SCREEN = 'login'
 
 DEV = False
 
+ARBITRATION_ID = 0x7F
+DESCRIPTION = ["Please connect a CAN bus.\n请连接CAN总线.",
+               "Please scan a QR code.\n请扫描二维码.",
+               "Serial number is not valid.\nPlease scan again.\n序列号无效.请重新扫描.",
+               "Date,Time,Manufacturing code are not valid.\nPlease scan again.\n日期,时间,制造代码无效.请重新扫描.",
+               "Operation completed successfully.\nPlease connect a new device.\n操作已成功完成.请连接新设备."]
+
 try:
     from local_settings import *
 except ImportError:
