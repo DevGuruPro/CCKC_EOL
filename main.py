@@ -24,7 +24,7 @@ class CCKCEOLApp(QMainWindow):
         screen_size = QApplication.primaryScreen().availableGeometry()
         center_x = (screen_size.width() - self.geometry().width()) // 2
         center_y = (screen_size.height() - self.geometry().height()) // 2
-        self.move(center_x, center_y-50)
+        self.move(center_x, center_y - 50)
 
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)  # Qt.WindowType.Popup
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -50,7 +50,7 @@ class CCKCEOLApp(QMainWindow):
                 #     self.ui.txtLabel.setText(f"Serial number detected. Please connect new device.")
                 #     self.start_can_watch_thread()
                 # else:
-                self.ui.txtLabel.setText(f"Please scan ADB serial number.")
+                self.ui.txtLabel.setText("Please scan ADB serial number.")
                 self.scan_adb_serial()
                 break
             else:

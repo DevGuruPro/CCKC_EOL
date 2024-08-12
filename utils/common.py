@@ -27,6 +27,6 @@ def convert_time_to_data():
     serial_data = bytearray()
     for num in date_num:
         serial_data.append(num.to_bytes(1, 'big')[0])
-    data = bytearray(0x04) + serial_data + serial_data + bytearray([0x43,0x4E])
+    data = bytearray(0x04) + serial_data + serial_data + bytearray([0x43, 0x4E])
     logger.debug(f"Date,Time,Location - > byte data: {data}")
     return data
