@@ -1,0 +1,30 @@
+<RCC>
+  <qresource prefix="img">
+    <file>img/more-vertical.svg</file>
+    <file>img/grid.svg</file>
+    <file>img/list.svg</file>
+    <file>img/no_assets.svg</file>
+    <file>img/search.svg</file>
+    <file>img/download.svg</file>
+    <file>img/radio.png</file>
+    <file>img/users.svg</file>
+    <file>img/layers.svg</file>
+    <file>img/folder_gray.svg</file>
+    <file>img/folder_purple.svg</file>
+    <file>img/file_gray.svg</file>
+    <file>img/file_purple.svg</file>
+    <file>img/port.png</file>
+    <file>img/settings_active.png</file>
+    <file>img/settings_inactive.png</file>
+    <file>img/chevron-down.png</file>
+    <file>img/x.png</file>
+    <file>img/success.png</file>
+    <file>img/warning.png</file>
+    <file>img/lock.png</file>
+    <file>img/user.png</file>
+    <file>img/check.png</file>
+    <file>img/logo.png</file>
+    <file>img/file_purple_checked.png</file>
+    <file>img/server.png</file>
+  </qresource>
+</RCC>
