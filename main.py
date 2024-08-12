@@ -53,8 +53,8 @@ class CCKCEOLApp(QMainWindow):
                 self._state = 'wait_can_connected'
             elif self._state == 'wait_can_connected':
                 if self.can.connect():
-                    self.sig_msg.emit('Please scan ADB serial number.')
                     self.scanned_code = ""
+                    self.sig_msg.emit(DESCRIPTION[1])
                     self._state = 'scan_adb_serial'
                 else:
                     time.sleep(3)
@@ -63,21 +63,27 @@ class CCKCEOLApp(QMainWindow):
             elif self._state == 'process_scanned_code':
                 result = self.can.handshake_data(data=convert_code_to_data(self.scanned_code), compare_len=6)
                 if result is None:
+                    self.sig_msg.emit(DESCRIPTION[3])
                     self._state = 'init'
+                    time.sleep(3)
                     continue
                 elif result is False:
-                    self.sig_msg.emit(DESCRIPTION[2])
+                    self.sig_msg.emit(DESCRIPTION[4])
                     self._state = 'scan_adb_serial'
+                    time.sleep(3)
                     continue
                 result = self.can.handshake_data(convert_time_to_data(), compare_len=7)
                 if result is None:
+                    self.sig_msg.emit(DESCRIPTION[3])
                     self._state = 'init'
+                    time.sleep(3)
                     continue
                 elif result is False:
-                    self.sig_msg.emit(DESCRIPTION[2])
+                    self.sig_msg.emit(DESCRIPTION[5])
                     self._state = 'scan_adb_serial'
+                    time.sleep(3)
                     continue
-                self.sig_msg.emit(DESCRIPTION[4])
+                self.sig_msg.emit(DESCRIPTION[6])
                 self.can.disconnect()
                 self._state = 'init'
 
@@ -91,6 +97,7 @@ class CCKCEOLApp(QMainWindow):
     def on_release(self, key):
         if self._state == 'scan_adb_serial' and key == Key.enter:
             logger.debug(f"ENTER released, scanned Code: {self.scanned_code}")
+            self.sig_msg.emit(DESCRIPTION[2])
             self._state = 'process_scanned_code'
 
     def _on_msg_received(self, msg):
