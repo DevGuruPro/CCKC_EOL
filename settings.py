@@ -17,8 +17,8 @@ if not os.path.exists(CONFIG_FILE):
         json.dump(DEFAULT_CONFIG, jp, indent=2)
 
 
-ADDRESS_HW = 0xCF
-ADDRESS_RPI = 0x7F
+SEND_ARBITRATION_ID = 0x1D7ECF7F
+RECV_ARBITRATION_ID = 0x1D7E7FCF
 
 DESCRIPTION = ["Please connect a CAN bus.\n请连接CAN总线.",
                "Please scan a QR code.\n请扫描二维码.",

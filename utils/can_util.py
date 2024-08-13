@@ -1,7 +1,7 @@
 import can
 import os
 
-from settings import ARBITRATION_ID, CAN_RECV_ITF, CAN_SEND_ITF
+from settings import CAN_RECV_ITF, CAN_SEND_ITF, RECV_ARBITRATION_ID, SEND_ARBITRATION_ID
 from utils.logger import logger
 
 
@@ -23,7 +23,7 @@ class CANHandler:
         try:
             self.recv_bus = can.interface.Bus(channel=CAN_RECV_ITF, bustype='socketcan')
             self.send_bus = can.interface.Bus(channel=CAN_SEND_ITF, bustype='socketcan')
-            msg = can.Message(arbitration_id=ARBITRATION_ID, is_remote_frame=True, is_extended_id=False)
+            msg = can.Message(arbitration_id=SEND_ARBITRATION_ID, is_remote_frame=True, is_extended_id=False)
             self.send_bus.send(msg, timeout=1)
             logger.info(f'Successfully sent a message on {CAN_SEND_ITF}. The device is connected.')
             return True
@@ -36,7 +36,7 @@ class CANHandler:
         if self.recv_bus is not None or self.connect():
             try:
                 msg = self.recv_bus.recv()
-                if msg.arbitration_id == ARBITRATION_ID:
+                if msg.arbitration_id == RECV_ARBITRATION_ID:
                     serial_number = msg.data
                     logger.debug(f"Received serial number {serial_number}")
                     return serial_number
@@ -47,7 +47,7 @@ class CANHandler:
     def write(self, data):
         if self.send_bus is not None or self.connect():
             try:
-                msg = can.Message(arbitration_id=ARBITRATION_ID, data=data, is_extended_id=False)
+                msg = can.Message(arbitration_id=SEND_ARBITRATION_ID, data=data, is_extended_id=False)
                 self.send_bus.send(msg, timeout=1)
                 return True
             except Exception as e:

@@ -15,7 +15,7 @@ def convert_code_to_data(scan_code=""):
 
 
 def convert_time_to_data():
-    date_num = [datetime.now().year, datetime.now().month, datetime.now().day,
+    date_num = [datetime.now().year - 2000, datetime.now().month, datetime.now().day,
                 datetime.now().hour, datetime.now().minute]
     serial_data = bytearray()
     for num in date_num:
