@@ -14,6 +14,10 @@ from utils.can_util import CANHandler
 from utils.common import convert_code_to_data, convert_time_to_data
 from utils.logger import logger
 
+import os
+
+# os.environ['DISPLAY'] = ':0.0'
+
 
 class CCKCEOLApp(QMainWindow):
 
@@ -36,7 +40,7 @@ class CCKCEOLApp(QMainWindow):
 
         self._b_stop = threading.Event()
         self._b_stop.clear()
-        self._state = 'init'
+        self._state = 'scan_adb_serial'
         self._fsm_thread = threading.Thread(target=self._fsm)
         self._fsm_thread.start()
         self.scanned_code = ""
@@ -91,6 +95,7 @@ class CCKCEOLApp(QMainWindow):
         try:
             if hasattr(key, 'char') and key.char:
                 self.scanned_code = self.scanned_code + key.char
+                logger.debug(f"key released, scanned key: {key.char}")
         except AttributeError:
             pass
 
