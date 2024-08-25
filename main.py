@@ -40,7 +40,7 @@ class CCKCEOLApp(QMainWindow):
 
         self._b_stop = threading.Event()
         self._b_stop.clear()
-        self._state = 'scan_adb_serial'
+        self._state = 'init'
         self._fsm_thread = threading.Thread(target=self._fsm)
         self._fsm_thread.start()
         self.scanned_code = ""
