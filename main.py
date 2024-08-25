@@ -14,10 +14,6 @@ from utils.can_util import CANHandler
 from utils.common import convert_code_to_data, convert_time_to_data
 from utils.logger import logger
 
-import os
-
-os.environ['DISPLAY'] = ':0.0'
-
 
 class CCKCEOLApp(QMainWindow):
 
