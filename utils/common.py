@@ -7,6 +7,8 @@ def convert_code_to_data(scan_code=""):
     part_code = scan_code.split('-')
     adb_version = int(part_code[0][3:])
     version_data = adb_version.to_bytes(1, 'big')
+    if len(part_code[1]) > 9:
+        return
     num = int(part_code[1])
     serial_data = num.to_bytes(4, 'big')
     data = bytearray(0x01) + serial_data + version_data + bytearray([0x2A, 0xFF])

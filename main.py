@@ -54,36 +54,42 @@ class CCKCEOLApp(QMainWindow):
             elif self._state == 'wait_can_connected':
                 if self.can.connect():
                     self.scanned_code = ""
-                    self.sig_msg.emit(DESCRIPTION[1])
                     self._state = 'scan_adb_serial'
                 else:
                     time.sleep(3)
             elif self._state == 'scan_adb_serial':
+                self.sig_msg.emit(DESCRIPTION[1])
                 pass
             elif self._state == 'process_scanned_code':
-                result = self.can.handshake_data(data=convert_code_to_data(self.scanned_code), compare_len=6)
-                if result is None:
-                    self.sig_msg.emit(DESCRIPTION[3])
-                    self._state = 'init'
+                data = convert_code_to_data(self.scanned_code)
+                if data is None:
+                    self.sig_msg.emit(DESCRIPTION[2])
                     time.sleep(3)
-                    continue
-                elif result is False:
-                    self.sig_msg.emit(DESCRIPTION[4])
                     self._state = 'scan_adb_serial'
-                    time.sleep(3)
                     continue
-                result = self.can.handshake_data(convert_time_to_data(), compare_len=7)
+                result = self.can.handshake_data(data, compare_len=6)
                 if result is None:
-                    self.sig_msg.emit(DESCRIPTION[3])
-                    self._state = 'init'
+                    self.sig_msg.emit(DESCRIPTION[4])
                     time.sleep(3)
+                    self._state = 'init'
                     continue
                 elif result is False:
                     self.sig_msg.emit(DESCRIPTION[5])
+                    time.sleep(3)
                     self._state = 'scan_adb_serial'
+                    continue
+                result = self.can.handshake_data(convert_time_to_data(), compare_len=7)
+                if result is None:
+                    self.sig_msg.emit(DESCRIPTION[4])
+                    self._state = 'init'
                     time.sleep(3)
                     continue
-                self.sig_msg.emit(DESCRIPTION[6])
+                elif result is False:
+                    self.sig_msg.emit(DESCRIPTION[6])
+                    time.sleep(3)
+                    self._state = 'scan_adb_serial'
+                    continue
+                self.sig_msg.emit(DESCRIPTION[7])
                 self.can.disconnect()
                 self._state = 'init'
 

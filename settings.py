@@ -23,6 +23,7 @@ RECV_ARBITRATION_ID = 0x1D7EF9CE
 
 DESCRIPTION = ["Please connect a CAN bus.\n请连接CAN总线.",
                "Please scan a QR code.\n请扫描二维码.",
+               "Serial number format is wrong.\n序列号格式错误."
                "Writing...\n现在正在写...",
                "Failed to connect to a CAN.\n无法连接到 CAN.",
                "Serial number is not valid.\nPlease scan again.\n序列号无效.请重新扫描.",

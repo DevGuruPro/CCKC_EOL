@@ -691,7 +691,7 @@ class Ui_EOL(object):
     # setupUi
 
     def retranslateUi(self, EOL):
-        EOL.setWindowTitle(QCoreApplication.translate("EOL", u"ExtraLayer", None))
+        EOL.setWindowTitle(QCoreApplication.translate("EOL", u"CCKC_EOL", None))
         self.logo.setText("")
 #if QT_CONFIG(tooltip)
         self.closeAppBtn.setToolTip(QCoreApplication.translate("EOL", u"Close", None))
