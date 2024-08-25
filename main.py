@@ -46,7 +46,7 @@ class CCKCEOLApp(QMainWindow):
         self.key_thread.start()
 
     def _fsm(self):
-        while not self._b_stop.isSet():
+        while not self._b_stop.is_set():
             time.sleep(.001)
             if self._state == 'init':
                 self.sig_msg.emit(DESCRIPTION[0])
