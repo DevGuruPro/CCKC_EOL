@@ -16,7 +16,7 @@ from utils.logger import logger
 
 import os
 
-# os.environ['DISPLAY'] = ':0.0'
+os.environ['DISPLAY'] = ':0.0'
 
 
 class CCKCEOLApp(QMainWindow):
