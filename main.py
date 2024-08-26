@@ -6,7 +6,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Signal
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QApplication, QMainWindow
-from pynput.keyboard import Listener, Key
+import keyboard
 
 from settings import DESCRIPTION
 from ui.ui_eol import Ui_EOL
@@ -42,9 +42,8 @@ class CCKCEOLApp(QMainWindow):
         self.scanned_code = ""
         self.sig_msg.connect(self._on_msg_received)
 
-        self.key_thread = threading.Thread(
-            target=lambda: Listener(on_press=self.on_press, on_release=self.on_release).start())
-        self.key_thread.start()
+        keyboard.on_press(self.on_press)
+        keyboard.on_release(self.on_release)
 
     def _fsm(self):
         while not self._b_stop.is_set():
@@ -94,16 +93,12 @@ class CCKCEOLApp(QMainWindow):
                 self.can.disconnect()
                 self._state = 'init'
 
-    def on_press(self, key):
-        try:
-            if hasattr(key, 'char') and key.char:
-                self.scanned_code = self.scanned_code + key.char
-                logger.debug(f"key released, scanned key: {key.char}")
-        except AttributeError:
-            pass
+    def on_press(self, event):
+        self.scanned_code = self.scanned_code + event.name
+        logger.debug(f"key released, scanned key: {event.name}")
 
-    def on_release(self, key):
-        if self._state == 'scan_adb_serial' and key == Key.enter:
+    def on_release(self, event):
+        if self._state == 'scan_adb_serial' and event.name == 'enter':
             logger.debug(f"ENTER released, scanned Code: {self.scanned_code}")
             self.sig_msg.emit(DESCRIPTION[2])
             self._state = 'process_scanned_code'
@@ -114,7 +109,6 @@ class CCKCEOLApp(QMainWindow):
     def closeEvent(self, event):
         self._b_stop.set()
         self._fsm_thread.join(.1)
-        self.key_thread.join(.1)
         return super().closeEvent(event)
 
 
