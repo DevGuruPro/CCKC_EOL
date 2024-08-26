@@ -17,7 +17,7 @@ class CANHandler:
     def setup_interface(self, interface):
         os.system(f'sudo ip link set {interface} down')
         os.system(f'sudo ip link set {interface} up type can bitrate {self.bitrate}')
-        os.system(f'sudo ifconfig can0 {interface} 65536')
+        os.system(f'sudo ifconfig {interface} txqueuelen 65536')
         logger.debug(f'{interface} interface set up with bitrate {self.bitrate}.')
 
     def connect(self):

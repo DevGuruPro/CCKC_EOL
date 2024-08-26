@@ -1,3 +1,4 @@
+import os
 import sys
 import threading
 import time
@@ -13,6 +14,8 @@ from ui.ui_eol import Ui_EOL
 from utils.can_util import CANHandler
 from utils.common import convert_code_to_data, convert_time_to_data
 from utils.logger import logger
+
+os.environ['DISPLAY'] = ':0.0'
 
 
 class CCKCEOLApp(QMainWindow):
@@ -41,6 +44,7 @@ class CCKCEOLApp(QMainWindow):
         self._fsm_thread.start()
         self.scanned_code = ""
         self.sig_msg.connect(self._on_msg_received)
+
         self.key_thread = threading.Thread(
             target=lambda: Listener(on_press=self.on_press, on_release=self.on_release).start())
         self.key_thread.start()
@@ -54,11 +58,11 @@ class CCKCEOLApp(QMainWindow):
             elif self._state == 'wait_can_connected':
                 if self.can.connect():
                     self.scanned_code = ""
+                    self.sig_msg.emit(DESCRIPTION[1])
                     self._state = 'scan_adb_serial'
                 else:
                     time.sleep(3)
             elif self._state == 'scan_adb_serial':
-                self.sig_msg.emit(DESCRIPTION[1])
                 pass
             elif self._state == 'process_scanned_code':
                 data = convert_code_to_data(self.scanned_code)
