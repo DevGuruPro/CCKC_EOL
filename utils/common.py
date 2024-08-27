@@ -4,6 +4,7 @@ from utils.logger import logger
 
 
 def convert_code_to_data(scan_code=""):
+    scan_code = scan_code.replace('\u2212', '-')
     part_code = scan_code.split('-')
     adb_version = int(part_code[0][3:])
     version_data = adb_version.to_bytes(1, 'big')
