@@ -43,7 +43,6 @@ class CCKCEOLApp(QMainWindow):
         self.sig_msg.connect(self._on_msg_received)
 
         keyboard.on_press(self.on_press)
-        keyboard.on_release(self.on_release)
 
     def _fsm(self):
         while not self._b_stop.is_set():
@@ -61,23 +60,23 @@ class CCKCEOLApp(QMainWindow):
             elif self._state == 'scan_adb_serial':
                 pass
             elif self._state == 'process_scanned_code':
-                data = convert_code_to_data(self.scanned_code)
-                if data is None:
-                    self.sig_msg.emit(DESCRIPTION[3])
-                    time.sleep(3)
-                    self._state = 'scan_adb_serial'
-                    continue
-                result = self.can.handshake_data(data, compare_len=6)
-                if result is None:
-                    self.sig_msg.emit(DESCRIPTION[4])
-                    time.sleep(3)
-                    self._state = 'init'
-                    continue
-                elif result is False:
-                    self.sig_msg.emit(DESCRIPTION[5])
-                    time.sleep(3)
-                    self._state = 'scan_adb_serial'
-                    continue
+                # data = convert_code_to_data(self.scanned_code)
+                # if data is None:
+                #     self.sig_msg.emit(DESCRIPTION[3])
+                #     time.sleep(3)
+                #     self._state = 'scan_adb_serial'
+                #     continue
+                # result = self.can.handshake_data(data, compare_len=6)
+                # if result is None:
+                #     self.sig_msg.emit(DESCRIPTION[4])
+                #     time.sleep(3)
+                #     self._state = 'init'
+                #     continue
+                # elif result is False:
+                #     self.sig_msg.emit(DESCRIPTION[5])
+                #     time.sleep(3)
+                #     self._state = 'scan_adb_serial'
+                #     continue
                 result = self.can.handshake_data(convert_time_to_data(), compare_len=7)
                 if result is None:
                     self.sig_msg.emit(DESCRIPTION[4])
@@ -95,14 +94,14 @@ class CCKCEOLApp(QMainWindow):
 
     def on_press(self, event):
         if self._state == 'scan_adb_serial':
-            self.scanned_code = self.scanned_code + event.name
-            logger.debug(f"key released, scanned key: {event.name}")
-
-    def on_release(self, event):
-        if self._state == 'scan_adb_serial' and event.name == 'enter':
-            logger.debug(f"ENTER released, scanned Code: {self.scanned_code}")
-            self.sig_msg.emit(DESCRIPTION[2])
-            self._state = 'process_scanned_code'
+            if event.name == 'enter':
+                logger.debug(f"ENTER released, scanned Code: {self.scanned_code}")
+                self.sig_msg.emit(DESCRIPTION[2])
+                self._state = 'process_scanned_code'
+                return
+            elif len(event.name) == 1:
+                self.scanned_code = self.scanned_code + event.name
+                logger.debug(f"key pressed, scanned key: {event.name}")
 
     def _on_msg_received(self, msg):
         self.ui.txtLabel.setText(msg)

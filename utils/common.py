@@ -11,7 +11,7 @@ def convert_code_to_data(scan_code=""):
         return
     num = int(part_code[1])
     serial_data = num.to_bytes(4, 'big')
-    data = bytearray(0x01) + serial_data + version_data + bytearray([0x2A, 0xFF])
+    data = bytearray([0x01]) + serial_data + version_data + bytearray([0x2A, 0xFF])
     logger.debug(f'Scanned Code -> byte data : {data}')
     return data
 
@@ -22,6 +22,6 @@ def convert_time_to_data():
     serial_data = bytearray()
     for num in date_num:
         serial_data.append(num.to_bytes(1, 'big')[0])
-    data = bytearray(0x04) + serial_data + serial_data + bytearray([0x43, 0x4E])
+    data = bytearray([0x04]) + serial_data + bytearray([0x43, 0x4E])
     logger.debug(f"Date,Time,Location - > byte data: {data}")
     return data
