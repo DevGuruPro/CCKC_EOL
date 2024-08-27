@@ -58,9 +58,11 @@ class CANHandler:
     def handshake_data(self, data, compare_len=6):
         if not self.write(data):
             return
+        logger.debug("Successfully write to CAN")
         recv = self.receive()
         if not recv:
             return
+        logger.debug("Successfully read from CAN")
         if data[1:compare_len] != recv[1:compare_len]:
             return False
         return True
