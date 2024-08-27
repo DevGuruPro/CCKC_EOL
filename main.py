@@ -63,7 +63,7 @@ class CCKCEOLApp(QMainWindow):
             elif self._state == 'process_scanned_code':
                 data = convert_code_to_data(self.scanned_code)
                 if data is None:
-                    self.sig_msg.emit(DESCRIPTION[2])
+                    self.sig_msg.emit(DESCRIPTION[3])
                     time.sleep(3)
                     self._state = 'scan_adb_serial'
                     continue
