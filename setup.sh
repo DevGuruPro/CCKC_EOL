@@ -19,7 +19,8 @@ sudo make install
 cd ${cur_dir}
 sudo apt install -y python3-pip
 sudo pip3 install -U pip
-sudo pip3 install -r requirements.txt
+sudo pip3 install -r requirements.txt --break-system-packages
+sudo apt install libxcb-cursor0
 
 # Enable SPI
 echo "dtparam=spi=on" | sudo tee -a /boot/firmware/config.txt

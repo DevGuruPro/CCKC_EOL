@@ -94,8 +94,9 @@ class CCKCEOLApp(QMainWindow):
                 self._state = 'init'
 
     def on_press(self, event):
-        self.scanned_code = self.scanned_code + event.name
-        logger.debug(f"key released, scanned key: {event.name}")
+        if self._state == 'scan_adb_serial':
+            self.scanned_code = self.scanned_code + event.name
+            logger.debug(f"key released, scanned key: {event.name}")
 
     def on_release(self, event):
         if self._state == 'scan_adb_serial' and event.name == 'enter':
