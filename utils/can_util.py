@@ -40,6 +40,7 @@ class CANHandler:
                 if msg.arbitration_id == RECV_ARBITRATION_ID:
                     serial_number = msg.data
                     logger.debug(f"Received serial number {serial_number}")
+                    logger.debug("Successfully read from CAN")
                     return serial_number
             except Exception as e:
                 logger.error(f"Failed to receive CAN data - {e}")
@@ -50,6 +51,7 @@ class CANHandler:
             try:
                 msg = can.Message(arbitration_id=SEND_ARBITRATION_ID, data=data, is_extended_id=True)
                 self.send_bus.send(msg, timeout=1)
+                logger.debug("Successfully write to CAN")
                 return True
             except Exception as e:
                 logger.error(f"Failed to send CAN data - {e}")
