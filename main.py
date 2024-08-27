@@ -60,23 +60,23 @@ class CCKCEOLApp(QMainWindow):
             elif self._state == 'scan_adb_serial':
                 pass
             elif self._state == 'process_scanned_code':
-                # data = convert_code_to_data(self.scanned_code)
-                # if data is None:
-                #     self.sig_msg.emit(DESCRIPTION[3])
-                #     time.sleep(3)
-                #     self._state = 'scan_adb_serial'
-                #     continue
-                # result = self.can.handshake_data(data, compare_len=6)
-                # if result is None:
-                #     self.sig_msg.emit(DESCRIPTION[4])
-                #     time.sleep(3)
-                #     self._state = 'init'
-                #     continue
-                # elif result is False:
-                #     self.sig_msg.emit(DESCRIPTION[5])
-                #     time.sleep(3)
-                #     self._state = 'scan_adb_serial'
-                #     continue
+                data = convert_code_to_data(self.scanned_code)
+                if data is None:
+                    self.sig_msg.emit(DESCRIPTION[3])
+                    time.sleep(3)
+                    self._state = 'scan_adb_serial'
+                    continue
+                result = self.can.handshake_data(data, compare_len=6)
+                if result is None:
+                    self.sig_msg.emit(DESCRIPTION[4])
+                    time.sleep(3)
+                    self._state = 'init'
+                    continue
+                elif result is False:
+                    self.sig_msg.emit(DESCRIPTION[5])
+                    time.sleep(3)
+                    self._state = 'scan_adb_serial'
+                    continue
                 result = self.can.handshake_data(convert_time_to_data(), compare_len=7)
                 if result is None:
                     self.sig_msg.emit(DESCRIPTION[4])
@@ -101,7 +101,6 @@ class CCKCEOLApp(QMainWindow):
                 return
             elif len(event.name) == 1:
                 self.scanned_code = self.scanned_code + event.name
-                logger.debug(f"key pressed, scanned key: {event.name}")
 
     def _on_msg_received(self, msg):
         self.ui.txtLabel.setText(msg)
